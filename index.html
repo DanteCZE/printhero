@@ -367,16 +367,24 @@
                         </div>
                     </div>
 
-                    <div id="widget-hp" class="widget" style="width: 100px; height: 100px;">
+                    <div id="widget-hp" class="widget" style="width: 160px; height: 120px;">
                         <label class="widget-label text-[0.5rem]">Životy</label>
                         <div class="widget-content flex-col relative w-full h-full gap-1 pt-3">
                             <i class="fa-solid fa-heart text-red-100 text-6xl absolute z-0 opacity-60 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
                             <div class="z-10 relative flex items-baseline gap-1">
-                                <span class="sync-current-hp text-3xl font-bold">8</span>
-                                <span class="text-gray-500">/</span>
+                                <span class="text-xs font-semibold">Maximum</span>
                                 <span class="sync-max-hp text-xl font-bold">8</span>
                             </div>
-                            <span class="text-[0.55rem] text-gray-600 z-10 relative">aktuální / maximum</span>
+                            <div class="z-10 relative flex justify-center gap-2 w-full">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-12 h-6 border-2 border-gray-700 bg-white rounded-sm"></div>
+                                    <span class="text-[0.5rem] text-gray-700">Aktuální</span>
+                                </div>
+                                <div class="flex flex-col items-center">
+                                    <div class="w-12 h-6 border-2 border-gray-700 bg-white rounded-sm"></div>
+                                    <span class="text-[0.5rem] text-gray-700">Dočasné</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -454,6 +462,22 @@
                 </button>
             </div>
 
+            <aside id="widget-settings-panel" class="w-64 bg-white rounded-lg shadow-md p-4 flex flex-col no-print border-t-4 border-red-800 flex-shrink-0">
+                <h3 class="text-lg font-bold text-gray-800 mb-2 border-b-2 border-gray-200 pb-2">
+                    <i class="fa-solid fa-sliders mr-2 text-red-700"></i>Nastavení widgetu
+                </h3>
+                <p id="widget-settings-empty" class="text-sm text-gray-500">Vyberte widget na stránce pro úpravu jeho velikosti.</p>
+                <div id="widget-settings-content" class="hidden">
+                    <p id="widget-settings-name" class="font-semibold text-gray-700 mb-4"></p>
+                    <label class="input-label" for="widget-setting-width">Šířka (px)</label>
+                    <input id="widget-setting-width" type="number" min="60" step="20" onchange="updateSelectedWidgetSize('width', this.value)" class="w-full border-2 border-gray-300 rounded-md p-2 focus:border-red-600 focus:outline-none">
+                    <label class="input-label mt-3" for="widget-setting-height">Výška (px)</label>
+                    <input id="widget-setting-height" type="number" min="40" step="20" onchange="updateSelectedWidgetSize('height', this.value)" class="w-full border-2 border-gray-300 rounded-md p-2 focus:border-red-600 focus:outline-none">
+                    <button onclick="removeSelectedWidget()" class="mt-6 w-full bg-red-700 hover:bg-red-600 text-white px-3 py-2 rounded font-semibold transition-colors">
+                        <i class="fa-solid fa-trash mr-2"></i>Odebrat widget
+                    </button>
+                </div>
+            </aside>
         </div>
     </main>
 
@@ -501,6 +525,7 @@
             layout: {},
             pageCount: 1
         };
+        let selectedWidget = null;
 
         function getTotalLevel() {
             return charData.classes.reduce((sum, cls) => sum + (parseInt(cls.level) || 0), 0) || 1;
@@ -594,7 +619,6 @@
             document.getElementById('edit-current-hp').value = currentHitPoints;
             document.getElementById('edit-current-hp').max = maxHitPoints;
             document.getElementById('edit-max-hp').innerText = maxHitPoints;
-            document.querySelectorAll('.sync-current-hp').forEach(el => el.innerText = currentHitPoints);
             document.querySelectorAll('.sync-max-hp').forEach(el => el.innerText = maxHitPoints);
         }
 
@@ -778,11 +802,14 @@
 
             const selectWidget = (widget) => {
                 document.querySelectorAll('.print-grid .widget.selected').forEach(selected => selected.classList.remove('selected'));
-                if (widget) widget.classList.add('selected');
+                selectedWidget = widget && widget.closest('.print-grid') ? widget : null;
+                if (selectedWidget) selectedWidget.classList.add('selected');
+                updateWidgetSettingsPanel();
             };
 
             const dragStart = (e) => {
                 const eventTarget = e.target;
+                if (eventTarget.closest('#widget-settings-panel')) return;
                 const handle = eventTarget.closest('.resize-handle');
                 if (handle) {
                     const widget = handle.closest('.widget');
@@ -889,6 +916,7 @@
                     charData.layout[draggedWidget.id].height = draggedWidget.style.height;
                     charData.layout[draggedWidget.id].left = draggedWidget.style.left;
                     charData.layout[draggedWidget.id].top = draggedWidget.style.top;
+                    updateWidgetSettingsPanel();
                     draggedWidget = null;
                     return;
                 }
@@ -939,6 +967,7 @@
                 } else {
                     draggedWidget.remove();
                     if (charData.layout[draggedWidget.id]) delete charData.layout[draggedWidget.id];
+                    selectWidget(null);
                 }
                 draggedWidget = null;
             };
@@ -951,7 +980,60 @@
             document.addEventListener('touchend', dragEnd);
         }
 
+        function updateWidgetSettingsPanel() {
+            const emptyMessage = document.getElementById('widget-settings-empty');
+            const settings = document.getElementById('widget-settings-content');
+            if (!selectedWidget || !selectedWidget.isConnected) {
+                selectedWidget = null;
+                emptyMessage.classList.remove('hidden');
+                settings.classList.add('hidden');
+                return;
+            }
+
+            const label = selectedWidget.querySelector('.widget-label');
+            document.getElementById('widget-settings-name').innerText = label ? label.innerText : 'Widget';
+            document.getElementById('widget-setting-width').value = selectedWidget.offsetWidth;
+            document.getElementById('widget-setting-height').value = selectedWidget.offsetHeight;
+            emptyMessage.classList.add('hidden');
+            settings.classList.remove('hidden');
+        }
+
+        function updateSelectedWidgetSize(dimension, value) {
+            if (!selectedWidget || !selectedWidget.isConnected) return;
+
+            const grid = selectedWidget.closest('.print-grid');
+            if (!grid || (dimension !== 'width' && dimension !== 'height')) return;
+
+            const isWidth = dimension === 'width';
+            const availableSize = isWidth
+                ? grid.clientWidth - selectedWidget.offsetLeft
+                : grid.clientHeight - selectedWidget.offsetTop;
+            const minimum = isWidth ? GRID_SIZE * 3 : GRID_SIZE * 2;
+            const requestedSize = Number(value);
+            const size = Math.min(
+                Math.floor(availableSize / GRID_SIZE) * GRID_SIZE,
+                Math.max(minimum, Math.round((Number.isFinite(requestedSize) ? requestedSize : minimum) / GRID_SIZE) * GRID_SIZE)
+            );
+            selectedWidget.style[dimension] = size + 'px';
+
+            const layout = charData.layout[selectedWidget.id] || {};
+            layout[dimension] = size + 'px';
+            charData.layout[selectedWidget.id] = layout;
+            updateWidgetSettingsPanel();
+        }
+
+        function removeSelectedWidget() {
+            if (!selectedWidget) return;
+            const widgetId = selectedWidget.id;
+            selectedWidget.remove();
+            delete charData.layout[widgetId];
+            selectedWidget = null;
+            updateWidgetSettingsPanel();
+        }
+
         function applyLayout() {
+            selectedWidget = null;
+            updateWidgetSettingsPanel();
             document.querySelectorAll('.print-grid .widget').forEach(w => w.remove());
             if (!charData.layout) return;
 
