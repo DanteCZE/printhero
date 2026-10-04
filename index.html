@@ -148,6 +148,27 @@
         .resize-handle.nw { top: -4px; left: -4px; }
         .resize-handle.se { bottom: -4px; right: -4px; }
         .resize-handle.sw { bottom: -4px; left: -4px; }
+
+        #print-editor-container:not(.hidden) {
+            display: grid;
+            grid-template-columns: 18rem minmax(0, 1fr) 14rem;
+            gap: 1.5rem;
+            min-height: 0;
+        }
+
+        #print-view-wrapper {
+            min-width: 0;
+            min-height: 0;
+        }
+
+        #pages-container {
+            width: max-content;
+            min-width: 100%;
+        }
+
+        #widget-library-sidebar {
+            min-height: 0;
+        }
         
         @media print {
             @page {
@@ -347,10 +368,10 @@
             </div>
         </div>
 
-        <div id="print-editor-container" class="hidden w-full h-[calc(100vh-100px)] flex gap-6">
+        <div id="print-editor-container" class="hidden w-full h-[calc(100vh-100px)]">
             
             <!-- Knihovna widgetů -->
-            <div id="widget-library-sidebar" class="w-80 bg-white rounded-lg shadow-md p-4 flex flex-col no-print border-t-4 border-gray-700 flex-shrink-0">
+            <div id="widget-library-sidebar" class="w-72 bg-white rounded-lg shadow-md p-4 flex flex-col no-print border-t-4 border-gray-700 flex-shrink-0">
                 <h3 class="text-lg font-bold text-gray-800 mb-2 border-b-2 border-gray-200 pb-2">
                     <i class="fa-solid fa-boxes-stacked mr-2 text-gray-600"></i>Knihovna widgetů
                 </h3>
@@ -403,15 +424,6 @@
                                 <span class="text-xs font-semibold">Maximum</span>
                                 <span class="sync-max-hp text-xl font-bold">8</span>
                             </div>
-<<<<<<< HEAD
-                            <div class="z-10 relative flex justify-center gap-2 w-full">
-                                <div class="flex flex-col items-center">
-                                    <div class="w-12 h-6 border-2 border-gray-700 bg-white rounded-sm"></div>
-                                    <span class="text-[0.5rem] text-gray-700">Aktuální</span>
-                                </div>
-                                <div class="flex flex-col items-center">
-                                    <div class="w-12 h-6 border-2 border-gray-700 bg-white rounded-sm"></div>
-=======
                             <div class="z-10 relative flex justify-center gap-3 w-full h-2/3">
                                 <div class="flex flex-col items-center justify-end w-[42%] h-full">
                                     <div class="hp-handwritten-box"></div>
@@ -419,7 +431,6 @@
                                 </div>
                                 <div class="flex flex-col items-center justify-end w-[42%] h-full">
                                     <div class="hp-handwritten-box"></div>
->>>>>>> agents/print-editor-panel-enhancements
                                     <span class="text-[0.5rem] text-gray-700">Dočasné</span>
                                 </div>
                             </div>
@@ -502,8 +513,8 @@
                 </div>
             </div>
 
-            <div id="print-view-wrapper" class="flex-grow overflow-auto flex flex-col items-center bg-gray-300 rounded-lg shadow-inner p-4 relative gap-6">
-                <div id="pages-container" class="flex flex-col gap-8 items-center w-full">
+            <div id="print-view-wrapper" class="overflow-auto flex flex-col bg-gray-300 rounded-lg shadow-inner p-4 relative gap-6">
+                <div id="pages-container" class="flex flex-col gap-8 items-center">
                     <!-- Stránky se dynamicky vygenerují -->
                 </div>
                 <button onclick="addNewPage()" class="no-print mt-4 mb-12 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded shadow-lg transition-colors flex items-center">
@@ -511,7 +522,7 @@
                 </button>
             </div>
 
-            <aside id="widget-settings-panel" class="w-64 bg-white rounded-lg shadow-md p-4 flex flex-col no-print border-t-4 border-red-800 flex-shrink-0">
+            <aside id="widget-settings-panel" class="w-56 bg-white rounded-lg shadow-md p-4 flex flex-col no-print border-t-4 border-red-800 flex-shrink-0">
                 <h3 class="text-lg font-bold text-gray-800 mb-2 border-b-2 border-gray-200 pb-2">
                     <i class="fa-solid fa-sliders mr-2 text-red-700"></i>Nastavení widgetu
                 </h3>
@@ -1228,7 +1239,6 @@
                 btnEditor.classList.remove('border-red-500', 'bg-red-700', 'shadow-inner');
                 editorView.classList.add('hidden');
                 printContainer.classList.remove('hidden');
-                printContainer.classList.add('flex');
             }
         }
 
