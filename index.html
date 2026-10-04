@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>D&D Character Sheet Creator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6;
+            color: #1f2937;
+        }
+
+        .input-label {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-transform: uppercase;
+            font-weight: bold;
+            display: block;
+            margin-top: 0.25rem;
+        }
+
+        .grid-bg {
+            background-image: 
+                linear-gradient(to right, #cbd5e1 1px, transparent 1px),
+                linear-gradient(to bottom, #cbd5e1 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .widget {
+            cursor: grab;
+            border: 2px solid #374151;
+            border-radius: 0.375rem;
+            background-color: white;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            user-select: none; 
+            -webkit-user-select: none;
+            touch-action: none;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        #widget-library .widget {
+            position: relative !important;
+            margin-bottom: 1rem;
+            flex-shrink: 0;
+            left: auto !important;
+            top: auto !important;
+        }
+
+        .widget:hover {
+            border-color: #ef4444;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .widget.dragging {
+            cursor: grabbing;
+            z-index: 1000 !important;
+            border-color: #b91c1c;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+
+        .widget-label {
+            font-size: 0.65rem;
+            color: #4b5563;
+            text-transform: uppercase;
+            font-weight: 800;
+            padding: 0.15rem 0.3rem;
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            letter-spacing: 0.05em;
+            background: rgba(255,255,255,0.9);
+            border-bottom-right-radius: 4px;
+            z-index: 5;
+        }
+
+        .widget-content {
+            flex-grow: 1;
+            padding: 1rem 0.5rem 0.5rem 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            overflow: hidden;
+        }
+        
+        .resize-handle {
+            position: absolute;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+        }
+        .widget:hover .resize-handle {
+            opacity: 1;
+        }
+        .resize-handle.se { bottom: -4px; right: -4px; width: 12px; height: 12px; background-color: #ef4444; cursor: se-resize; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .resize-handle.e { top: 0; right: -4px; width: 8px; height: 100%; cursor: e-resize; }
+        .resize-handle.s { bottom: -4px; left: 0; width: 100%; height: 8px; cursor: s-resize; }
+        
+        @media print {
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            
+            html, body {
+                background-color: white !important;
+                height: auto !important;
+                min-height: auto !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            
+            main {
+                overflow: visible !important;
+                height: auto !important;
+                background-color: transparent !important;
+                padding: 0 !important;
+                display: block !important;
+            }
+
+            .no-print, #editor-controls, #widget-library-sidebar, #editor-view {
+                display: none !important;
+            }
+            
+            #print-editor-container {
+                display: block !important;
+                height: auto !important;
+                padding: 0 !important;
+                width: 100% !important;
+            }
+            
+            #print-view-wrapper {
+                display: block !important;
+                overflow: visible !important;
+                height: auto !important;
+                padding: 0 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+            
+            .print-page {
+                margin: 0 !important;
+                box-shadow: none !important;
+                border: none !important;
+                width: 210mm !important;
+                height: 297mm !important;
+                page-break-after: always;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                position: relative !important;
+            }
+
+            .print-grid {
+                box-shadow: none !important;
+                border: none !important;
+                background-image: none !important;
+            }
+            
+            .widget {
+                border-color: #000 !important;
+                background-color: transparent !important;
+                box-shadow: none !important;
+            }
+            
+            .widget-label {
+                color: #000 !important;
+            }
+
+            .resize-handle { display: none !important; }
+            
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <nav id="editor-controls" class="bg-red-800 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center no-print">
+        <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-dragon text-2xl"></i>
+            <h1 class="text-xl font-bold font-serif tracking-wider">D&D 5e Tvorba Deníku</h1>
+        </div>
+        
+        <div class="flex space-x-4">
+            <button onclick="switchMode('editor')" id="btn-editor" class="px-4 py-2 bg-red-700 hover:bg-red-600 rounded font-semibold transition-colors border-2 border-red-500 shadow-inner">
+                <i class="fa-solid fa-pen-to-square mr-2"></i>Editor
+            </button>
+            <button onclick="switchMode('preview')" id="btn-preview" class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded font-semibold transition-colors border-2 border-transparent">
+                <i class="fa-solid fa-shapes mr-2"></i>Editor tisku
+            </button>
+            <button onclick="window.print()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded font-semibold transition-colors shadow-lg">
+                <i class="fa-solid fa-print mr-2"></i>Tisk (A4)
+            </button>
+            
+            <div class="border-l-2 border-red-600 pl-4 ml-2 flex space-x-2">
+                <button onclick="saveCharacter()" class="px-3 py-2 bg-green-700 hover:bg-green-600 rounded font-semibold transition-colors shadow" title="Uložit postavu">
+                    <i class="fa-solid fa-download mr-1"></i> Uložit
+                </button>
+                <label for="load-file" class="px-3 py-2 bg-purple-700 hover:bg-purple-600 rounded font-semibold transition-colors shadow cursor-pointer" title="Načíst postavu">
+                    <i class="fa-solid fa-upload mr-1"></i> Načíst
+                </label>
+                <input type="file" id="load-file" accept=".json" class="hidden" onchange="loadCharacter(event)">
+            </div>
+        </div>
+    </nav>
+
+    <div id="error-alert" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-[100] shadow-lg" role="alert">
+        <strong class="font-bold">Chyba!</strong>
+        <span class="block sm:inline" id="error-message">Něco se pokazilo.</span>
+        <span class="absolute top-0 bottom-0 right-0 px-4 py-3" onclick="document.getElementById('error-alert').classList.add('hidden')">
+            <svg class="fill-current h-6 w-6 text-red-500 cursor-pointer" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+        </span>
+    </div>
+
+    <main class="flex-grow overflow-auto p-4 flex justify-center bg-gray-200">
+        
+        <div id="editor-view" class="w-full max-w-5xl bg-white rounded-lg shadow-md p-6 my-4 transition-opacity duration-300">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-red-800 pb-2">Základní informace</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="col-span-1 md:col-span-2">
+                    <label class="block text-sm font-bold text-gray-700 mb-1 uppercase">Jméno postavy</label>
+                    <input type="text" id="edit-name" oninput="updateBasicInfo('name', this.value)" class="w-full border-2 border-gray-300 rounded-md p-2 text-lg focus:border-red-600 focus:outline-none transition-colors" placeholder="Zadejte jméno...">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1 uppercase">Rasa</label>
+                    <input type="text" id="edit-race" oninput="updateBasicInfo('race', this.value)" class="w-full border-2 border-gray-300 rounded-md p-2 focus:border-red-600 focus:outline-none transition-colors" placeholder="Např. Elf">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-1 uppercase">Zázemí</label>
+                    <input type="text" id="edit-background" oninput="updateBasicInfo('background', this.value)" class="w-full border-2 border-gray-300 rounded-md p-2 focus:border-red-600 focus:outline-none transition-colors" placeholder="Např. Šarlatán">
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Bojové statistiky</h3>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div class="flex flex-col items-center">
+                        <label class="block text-sm font-bold text-gray-700 mb-1 uppercase text-center">Obranné číslo (OČ)</label>
+                        <input type="number" id="edit-ac" oninput="updateAC(this.value)" class="w-24 border-2 border-gray-300 rounded-md p-2 text-2xl text-center font-bold focus:border-red-600 focus:outline-none transition-colors shadow-inner" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <div class="flex justify-between items-end mb-4 border-b-2 border-gray-200 pb-2">
+                    <h3 class="text-xl font-bold text-gray-800">Vlastnosti (Attributes)</h3>
+                    <div class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded shadow-inner">
+                        Zdatnostní bonus: <span id="editor-prof-bonus" class="text-red-700">+2</span>
+                    </div>
+                </div>
+                <div id="attributes-editor-container" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <!-- Atributy se generují v JS -->
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Dovednosti (Skills)</h3>
+                <div id="skills-editor-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-gray-50 p-4 rounded border border-gray-200">
+                    <!-- Dovednosti se generují v JS -->
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <div class="flex justify-between items-center mb-4 border-b-2 border-gray-200 pb-2">
+                    <h3 class="text-xl font-bold text-gray-800">Povolání a Úroveň</h3>
+                    <button onclick="addClass()" class="bg-green-600 hover:bg-green-500 text-white px-3 py-1 rounded text-sm font-bold transition-colors">
+                        <i class="fa-solid fa-plus mr-1"></i> Přidat povolání
+                    </button>
+                </div>
+                <div id="classes-editor-container" class="space-y-4">
+                    <!-- Třídy se generují v JS -->
+                </div>
+            </div>
+        </div>
+
+        <div id="print-editor-container" class="hidden w-full h-[calc(100vh-100px)] flex gap-6">
+            
+            <!-- Knihovna widgetů -->
+            <div id="widget-library-sidebar" class="w-80 bg-white rounded-lg shadow-md p-4 flex flex-col no-print border-t-4 border-gray-700 flex-shrink-0">
+                <h3 class="text-lg font-bold text-gray-800 mb-2 border-b-2 border-gray-200 pb-2">
+                    <i class="fa-solid fa-boxes-stacked mr-2 text-gray-600"></i>Knihovna widgetů
+                </h3>
+                <p class="text-xs text-gray-500 mb-4">Přetáhněte widget na papír (klonuje se). Tažením za okraj lze měnit velikost. Upuštěním mimo mřížku se smaže.</p>
+                
+                <div id="widget-library" class="flex-grow overflow-y-auto pr-2 flex flex-col gap-2 pb-10">
+                    
+                    <h4 class="font-bold text-gray-400 text-xs mt-2 uppercase">Základní</h4>
+                    <div id="widget-name" class="widget" style="width: 240px; height: 60px;">
+                        <label class="widget-label">Jméno postavy</label>
+                        <div class="sync-name widget-content text-xl font-bold font-serif text-gray-900 leading-tight"></div>
+                    </div>
+
+                    <div id="widget-classes" class="widget" style="width: 240px; height: 60px;">
+                        <label class="widget-label">Povolání a úroveň</label>
+                        <div class="sync-classes widget-content text-md font-semibold text-gray-800 leading-tight"></div>
+                    </div>
+
+                    <div id="widget-background" class="widget" style="width: 140px; height: 60px;">
+                        <label class="widget-label">Zázemí</label>
+                        <div class="sync-background widget-content text-md font-semibold text-gray-800 leading-tight"></div>
+                    </div>
+
+                    <div id="widget-race" class="widget" style="width: 140px; height: 60px;">
+                        <label class="widget-label">Rasa</label>
+                        <div class="sync-race widget-content text-md font-semibold text-gray-800 leading-tight"></div>
+                    </div>
+                    
+                    <div id="widget-prof" class="widget" style="width: 80px; height: 80px;">
+                        <label class="widget-label text-[0.5rem]">Zdatnost</label>
+                        <div class="widget-content flex-col relative w-full h-full pb-2">
+                            <span class="sync-prof text-3xl font-bold mt-2">+2</span>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-400 text-xs mt-4 uppercase">Bojové statistiky</h4>
+                    <div id="widget-ac" class="widget" style="width: 80px; height: 100px;">
+                        <label class="widget-label text-[0.5rem]">Obranné číslo</label>
+                        <div class="widget-content flex-col relative w-full h-full pb-2">
+                            <i class="fa-solid fa-shield-halved text-gray-200 text-6xl absolute z-0 opacity-40 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 mt-2"></i>
+                            <span class="sync-ac text-3xl font-bold mt-2 z-10 relative">10</span>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-400 text-xs mt-4 uppercase">Vlastnosti</h4>
+                    <div class="flex flex-wrap gap-2">
+                        <!-- Síla -->
+                        <div id="widget-str" class="widget" style="width: 80px; height: 100px;">
+                            <label class="widget-label text-[0.5rem]">Síla</label>
+                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                                <span class="sync-str-mod text-3xl font-bold mt-2">+0</span>
+                                <div class="sync-str-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                            </div>
+                        </div>
+                        <!-- Obratnost -->
+                        <div id="widget-dex" class="widget" style="width: 80px; height: 100px;">
+                            <label class="widget-label text-[0.5rem]">Obratnost</label>
+                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                                <span class="sync-dex-mod text-3xl font-bold mt-2">+0</span>
+                                <div class="sync-dex-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                            </div>
+                        </div>
+                        <!-- Odolnost -->
+                        <div id="widget-con" class="widget" style="width: 80px; height: 100px;">
+                            <label class="widget-label text-[0.5rem]">Odolnost</label>
+                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                                <span class="sync-con-mod text-3xl font-bold mt-2">+0</span>
+                                <div class="sync-con-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                            </div>
+                        </div>
+                        <!-- Inteligence -->
+                        <div id="widget-int" class="widget" style="width: 80px; height: 100px;">
+                            <label class="widget-label text-[0.5rem]">Inteligence</label>
+                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                                <span class="sync-int-mod text-3xl font-bold mt-2">+0</span>
+                                <div class="sync-int-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                            </div>
+                        </div>
+                        <!-- Moudrost -->
+                        <div id="widget-wis" class="widget" style="width: 80px; height: 100px;">
+                            <label class="widget-label text-[0.5rem]">Moudrost</label>
+                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                                <span class="sync-wis-mod text-3xl font-bold mt-2">+0</span>
+                                <div class="sync-wis-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                            </div>
+                        </div>
+                        <!-- Charisma -->
+                        <div id="widget-cha" class="widget" style="width: 80px; height: 100px;">
+                            <label class="widget-label text-[0.5rem]">Charisma</label>
+                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                                <span class="sync-cha-mod text-3xl font-bold mt-2">+0</span>
+                                <div class="sync-cha-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-400 text-xs mt-4 uppercase">Dovednosti</h4>
+                    <div id="widget-skills" class="widget" style="width: 200px; height: 420px;">
+                        <label class="widget-label">Dovednosti</label>
+                        <div class="widget-content items-start pt-6">
+                            <div class="sync-skills-list w-full flex flex-col gap-[2px] text-[0.7rem]">
+                                <!-- Generuje se v JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="print-view-wrapper" class="flex-grow overflow-auto flex flex-col items-center bg-gray-300 rounded-lg shadow-inner p-4 relative gap-6">
+                <div id="pages-container" class="flex flex-col gap-8 items-center w-full">
+                    <!-- Stránky se dynamicky vygenerují -->
+                </div>
+                <button onclick="addNewPage()" class="no-print mt-4 mb-12 bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded shadow-lg transition-colors flex items-center">
+                    <i class="fa-solid fa-plus mr-2"></i> Přidat další stránku
+                </button>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        const GRID_SIZE = 20;
+
+        // Atributy a dovednosti 
+        const attrLabels = {
+            str: 'Síla', dex: 'Obratnost', con: 'Odolnost',
+            int: 'Inteligence', wis: 'Moudrost', cha: 'Charisma'
+        };
+
+        const attrShort = { str: 'Síl', dex: 'Obr', con: 'Odo', int: 'Int', wis: 'Mou', cha: 'Cha' };
+
+        const skillsDef = [
+            { id: 'acrobatics', name: 'Akrobacie', attr: 'dex' },
+            { id: 'animalHandling', name: 'Zacházení se zvířaty', attr: 'wis' },
+            { id: 'arcana', name: 'Znalost magie', attr: 'int' },
+            { id: 'athletics', name: 'Atletika', attr: 'str' },
+            { id: 'deception', name: 'Klamání', attr: 'cha' },
+            { id: 'history', name: 'Historie', attr: 'int' },
+            { id: 'insight', name: 'Vhled', attr: 'wis' },
+            { id: 'intimidation', name: 'Zastrašování', attr: 'cha' },
+            { id: 'investigation', name: 'Pátrání', attr: 'int' },
+            { id: 'medicine', name: 'Lékařství', attr: 'wis' },
+            { id: 'nature', name: 'Příroda', attr: 'int' },
+            { id: 'perception', name: 'Postřeh', attr: 'wis' },
+            { id: 'performance', name: 'Vystupování', attr: 'cha' },
+            { id: 'persuasion', name: 'Přesvědčování', attr: 'cha' },
+            { id: 'religion', name: 'Náboženství', attr: 'int' },
+            { id: 'sleightOfHand', name: 'Čachry', attr: 'dex' },
+            { id: 'stealth', name: 'Nenápadnost', attr: 'dex' },
+            { id: 'survival', name: 'Přežití', attr: 'wis' }
+        ];
+
+        let charData = {
+            name: '',
+            race: '',
+            background: '',
+            ac: 10,
+            classes: [{ name: '', subclass: '', level: 1 }],
+            attributes: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+            skills: {},
+            layout: {},
+            pageCount: 1
+        };
+
+        function getTotalLevel() {
+            return charData.classes.reduce((sum, cls) => sum + (parseInt(cls.level) || 0), 0) || 1;
+        }
+
+        function getProficiencyBonus() {
+            return Math.ceil(getTotalLevel() / 4) + 1;
+        }
+
+        function calculateModifier(score) {
+            return Math.floor((score - 10) / 2);
+        }
+
+        function formatMod(val) {
+            return val >= 0 ? `+${val}` : `${val}`;
+        }
+
+        function recalculateAll() {
+            updatePrintClasses();
+            updatePrintAttributes();
+            renderSkillsEditor();
+            updatePrintSkills();
+        }
+
+        function renderPages() {
+            const container = document.getElementById('pages-container');
+            container.innerHTML = '';
+            const count = charData.pageCount || 1;
+            for (let i = 0; i < count; i++) {
+                container.insertAdjacentHTML('beforeend', createPageHTML(i));
+            }
+        }
+
+        function createPageHTML(index) {
+            return `
+                <div class="print-page relative bg-white flex items-center justify-center" data-page="${index}" style="width: 210mm; height: 297mm; min-width: 210mm; min-height: 297mm; box-shadow: 0 10px 25px rgba(0,0,0,0.15);">
+                    <div class="print-grid relative grid-bg" data-page="${index}" style="width: 680px; height: 1000px;">
+                    </div>
+                </div>
+            `;
+        }
+
+        function addNewPage() {
+            charData.pageCount = (charData.pageCount || 1) + 1;
+            document.getElementById('pages-container').insertAdjacentHTML('beforeend', createPageHTML(charData.pageCount - 1));
+        }
+
+        function updateBasicInfo(field, value) {
+            charData[field] = value;
+            document.querySelectorAll(`.sync-${field}`).forEach(el => el.innerText = value);
+        }
+
+        function updateAC(value) {
+            charData.ac = parseInt(value) || 0;
+            document.querySelectorAll('.sync-ac').forEach(el => el.innerText = charData.ac);
+        }
+
+        function renderAttributesEditor() {
+            const container = document.getElementById('attributes-editor-container');
+            container.innerHTML = '';
+            for (const [key, label] of Object.entries(attrLabels)) {
+                const val = charData.attributes[key];
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="bg-gray-50 border border-gray-200 rounded p-4 flex flex-col items-center">
+                        <label class="block text-xs font-bold text-gray-500 mb-2 uppercase">${label}</label>
+                        <input type="number" value="${val}" min="1" max="30" onchange="updateAttribute('${key}', this.value)" class="w-16 text-center border-2 border-gray-300 rounded-md p-2 text-xl font-bold focus:border-red-600 focus:outline-none">
+                    </div>
+                `);
+            }
+        }
+
+        function updateAttribute(key, value) {
+            charData.attributes[key] = parseInt(value) || 10;
+            recalculateAll();
+        }
+
+        function updatePrintAttributes() {
+            const pb = getProficiencyBonus();
+            document.getElementById('editor-prof-bonus').innerText = `+${pb}`;
+            document.querySelectorAll(`.sync-prof`).forEach(el => el.innerText = `+${pb}`);
+
+            for (const [key, val] of Object.entries(charData.attributes)) {
+                const mod = formatMod(calculateModifier(val));
+                document.querySelectorAll(`.sync-${key}-score`).forEach(el => el.innerText = val);
+                document.querySelectorAll(`.sync-${key}-mod`).forEach(el => el.innerText = mod);
+            }
+        }
+
+        function renderSkillsEditor() {
+            const container = document.getElementById('skills-editor-container');
+            container.innerHTML = '';
+            const pb = getProficiencyBonus();
+
+            skillsDef.forEach(skill => {
+                const isProf = charData.skills[skill.id] || false;
+                const attrMod = calculateModifier(charData.attributes[skill.attr]);
+                const total = attrMod + (isProf ? pb : 0);
+                
+                container.insertAdjacentHTML('beforeend', `
+                    <label class="flex items-center justify-between p-2 hover:bg-gray-200 rounded cursor-pointer transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <input type="checkbox" ${isProf ? 'checked' : ''} onchange="updateSkill('${skill.id}', this.checked)" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
+                            <span class="text-sm font-semibold text-gray-700">${skill.name} <span class="text-gray-400 text-xs">(${attrShort[skill.attr]})</span></span>
+                        </div>
+                        <span class="font-bold ${isProf ? 'text-red-700' : 'text-gray-600'}">${formatMod(total)}</span>
+                    </label>
+                `);
+            });
+        }
+
+        function updateSkill(id, isProficient) {
+            charData.skills[id] = isProficient;
+            recalculateAll();
+        }
+
+        function updatePrintSkills() {
+            const pb = getProficiencyBonus();
+            let html = '';
+            
+            skillsDef.forEach(skill => {
+                const isProf = charData.skills[skill.id] || false;
+                const attrMod = calculateModifier(charData.attributes[skill.attr]);
+                const total = attrMod + (isProf ? pb : 0);
+                const icon = isProf ? '<i class="fa-solid fa-circle text-[8px] text-black"></i>' : '<i class="fa-regular fa-circle text-[8px] text-gray-400"></i>';
+                
+                html += `
+                    <div class="flex justify-between items-center w-full border-b border-gray-200 pb-[1px]">
+                        <div class="flex items-center gap-1">
+                            <span class="w-3 text-center">${icon}</span>
+                            <span class="${isProf ? 'font-bold' : ''}">${skill.name} <span class="text-[0.5rem] text-gray-500">(${attrShort[skill.attr]})</span></span>
+                        </div>
+                        <span class="font-bold border-b border-black min-w-[20px] text-center">${formatMod(total)}</span>
+                    </div>
+                `;
+            });
+
+            document.querySelectorAll(`.sync-skills-list`).forEach(el => el.innerHTML = html);
+        }
+
+        function renderClassesEditor() {
+            const container = document.getElementById('classes-editor-container');
+            container.innerHTML = '';
+            
+            charData.classes.forEach((cls, index) => {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="bg-gray-50 p-4 rounded-md border border-gray-200 flex flex-wrap gap-4 items-end relative">
+                        ${index > 0 ? `<button onclick="removeClass(${index})" class="absolute top-2 right-2 text-red-500 hover:text-red-700" title="Odebrat"><i class="fa-solid fa-times"></i></button>` : ''}
+                        
+                        <div class="flex-grow min-w-[150px]">
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Povolání</label>
+                            <input type="text" value="${cls.name}" oninput="updateClassData(${index}, 'name', this.value)" class="w-full border-2 border-gray-300 rounded-md p-2 focus:border-red-600 focus:outline-none">
+                        </div>
+                        
+                        <div class="flex-grow min-w-[150px]">
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">Obor (Subclass)</label>
+                            <input type="text" value="${cls.subclass}" oninput="updateClassData(${index}, 'subclass', this.value)" class="w-full border-2 border-gray-300 rounded-md p-2 focus:border-red-600 focus:outline-none">
+                        </div>
+                        
+                        <div class="w-32 flex-shrink-0">
+                            <label class="block text-xs font-bold text-gray-500 mb-1 uppercase text-center">Úroveň</label>
+                            <div class="flex items-center justify-between border-2 border-gray-300 rounded-md overflow-hidden bg-white">
+                                <button onclick="changeLevel(${index}, -1)" class="w-8 h-10 bg-gray-100 hover:bg-gray-200 font-bold border-r border-gray-300"><i class="fa-solid fa-minus"></i></button>
+                                <input type="number" id="class-level-${index}" value="${cls.level}" readonly class="w-12 h-10 text-center font-bold text-lg focus:outline-none appearance-none m-0 p-0">
+                                <button onclick="changeLevel(${index}, 1)" class="w-8 h-10 bg-gray-100 hover:bg-gray-200 font-bold border-l border-gray-300"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        function updatePrintClasses() {
+            let classString = charData.classes.map(cls => {
+                let name = cls.name || '?';
+                let sub = cls.subclass ? ` (${cls.subclass})` : '';
+                return `${name}${sub} ${cls.level}`;
+            }).join(' / ');
+            
+            if (classString === '? 1') classString = '';
+            document.querySelectorAll(`.sync-classes`).forEach(el => el.innerText = classString);
+        }
+
+        function removeClass(index) {
+            charData.classes.splice(index, 1);
+            renderClassesEditor();
+            recalculateAll();
+        }
+
+        function updateClassData(index, field, value) {
+            charData.classes[index][field] = value;
+            updatePrintClasses();
+        }
+
+        function changeLevel(index, delta) {
+            let newLevel = charData.classes[index].level + delta;
+            if (newLevel < 1) newLevel = 1; 
+            if (newLevel > 20) newLevel = 20; 
+            charData.classes[index].level = newLevel;
+            document.getElementById(`class-level-${index}`).value = newLevel;
+            recalculateAll(); // Update PB and skills
+        }
+
+        function addClass() {
+            charData.classes.push({ name: '', subclass: '', level: 1 });
+            renderClassesEditor();
+            recalculateAll();
+        }
+
+        function initResizeHandles(element) {
+            if (element.querySelector('.resize-handle')) return;
+            ['se', 'e', 's'].forEach(dir => {
+                const handle = document.createElement('div');
+                handle.className = `resize-handle ${dir}`;
+                handle.dataset.dir = dir;
+                element.appendChild(handle);
+            });
+        }
+
+        function initDragAndDrop() {
+            let isDragging = false, isResizing = false;
+            let resizeDir = null, draggedWidget = null;
+            let startMouseX, startMouseY, startWidth, startHeight;
+
+            const dragStart = (e) => {
+                if (e.target.classList.contains('resize-handle') || (e.touches && e.touches[0].target.classList.contains('resize-handle'))) {
+                    isResizing = true;
+                    const handle = e.target.classList.contains('resize-handle') ? e.target : e.touches[0].target;
+                    draggedWidget = handle.closest('.widget');
+                    resizeDir = handle.dataset.dir;
+                    
+                    const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                    const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                    
+                    startMouseX = clientX;
+                    startMouseY = clientY;
+                    startWidth = draggedWidget.offsetWidth;
+                    startHeight = draggedWidget.offsetHeight;
+                    e.preventDefault();
+                    return;
+                }
+
+                const target = e.target.closest('.widget');
+                if (!target || (e.type === 'mousedown' && e.button !== 0)) return;
+                
+                isDragging = true;
+                
+                if (target.closest('#widget-library')) {
+                    draggedWidget = target.cloneNode(true);
+                    draggedWidget.id = target.id + '_instance_' + Date.now();
+                } else {
+                    draggedWidget = target;
+                }
+                
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+                const rect = target.getBoundingClientRect();
+                
+                startMouseX = clientX - rect.left;
+                startMouseY = clientY - rect.top;
+
+                draggedWidget.style.width = target.offsetWidth + 'px'; 
+                draggedWidget.style.height = target.offsetHeight + 'px'; 
+                draggedWidget.style.position = 'fixed';
+                draggedWidget.style.left = rect.left + 'px';
+                draggedWidget.style.top = rect.top + 'px';
+                draggedWidget.classList.add('dragging');
+                
+                document.body.appendChild(draggedWidget);
+            };
+
+            const drag = (e) => {
+                if (!isDragging && !isResizing) return;
+                e.preventDefault();
+                const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+
+                if (isResizing && draggedWidget) {
+                    const deltaX = clientX - startMouseX;
+                    const deltaY = clientY - startMouseY;
+                    
+                    if (resizeDir.includes('e')) {
+                        let newWidth = Math.max(GRID_SIZE * 3, Math.round((startWidth + deltaX) / GRID_SIZE) * GRID_SIZE); 
+                        draggedWidget.style.width = newWidth + 'px';
+                    }
+                    if (resizeDir.includes('s')) {
+                        let newHeight = Math.max(GRID_SIZE * 2, Math.round((startHeight + deltaY) / GRID_SIZE) * GRID_SIZE); 
+                        draggedWidget.style.height = newHeight + 'px';
+                    }
+                    return;
+                }
+                draggedWidget.style.left = (clientX - startMouseX) + 'px';
+                draggedWidget.style.top = (clientY - startMouseY) + 'px';
+            };
+
+            const dragEnd = (e) => {
+                if (isResizing && draggedWidget) {
+                    isResizing = false;
+                    if (!charData.layout[draggedWidget.id]) charData.layout[draggedWidget.id] = {};
+                    charData.layout[draggedWidget.id].width = draggedWidget.style.width;
+                    charData.layout[draggedWidget.id].height = draggedWidget.style.height;
+                    draggedWidget = null;
+                    return;
+                }
+
+                if (!isDragging || !draggedWidget) return;
+                isDragging = false;
+                draggedWidget.classList.remove('dragging');
+                
+                const clientX = e.type.includes('mouse') ? e.clientX : e.changedTouches[0].clientX;
+                const clientY = e.type.includes('mouse') ? e.clientY : e.changedTouches[0].clientY;
+
+                const grids = document.querySelectorAll('.print-grid');
+                let targetGrid = null, targetRect = null, targetPage = 0;
+
+                grids.forEach(grid => {
+                    const rect = grid.getBoundingClientRect();
+                    if (clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom) {
+                        targetGrid = grid;
+                        targetRect = rect;
+                        targetPage = parseInt(grid.dataset.page);
+                    }
+                });
+
+                if (targetGrid) {
+                    let relX = Math.round((clientX - startMouseX - targetRect.left) / GRID_SIZE) * GRID_SIZE;
+                    let relY = Math.round((clientY - startMouseY - targetRect.top) / GRID_SIZE) * GRID_SIZE;
+
+                    const w = draggedWidget.offsetWidth, h = draggedWidget.offsetHeight;
+                    if (relX < 0) relX = 0;
+                    if (relY < 0) relY = 0;
+                    if (relX + w > targetRect.width) relX = Math.floor((targetRect.width - w) / GRID_SIZE) * GRID_SIZE;
+                    if (relY + h > targetRect.height) relY = Math.floor((targetRect.height - h) / GRID_SIZE) * GRID_SIZE;
+
+                    draggedWidget.style.position = 'absolute';
+                    draggedWidget.style.left = relX + 'px';
+                    draggedWidget.style.top = relY + 'px';
+                    targetGrid.appendChild(draggedWidget);
+                    
+                    initResizeHandles(draggedWidget);
+
+                    if (!charData.layout[draggedWidget.id]) charData.layout[draggedWidget.id] = {};
+                    charData.layout[draggedWidget.id].placed = true;
+                    charData.layout[draggedWidget.id].left = relX + 'px';
+                    charData.layout[draggedWidget.id].top = relY + 'px';
+                    charData.layout[draggedWidget.id].page = targetPage;
+                    charData.layout[draggedWidget.id].baseId = draggedWidget.id.split('_instance_')[0];
+                } else {
+                    draggedWidget.remove();
+                    if (charData.layout[draggedWidget.id]) delete charData.layout[draggedWidget.id];
+                }
+                draggedWidget = null;
+            };
+
+            document.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+            document.addEventListener('touchstart', dragStart, { passive: false });
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', dragEnd);
+        }
+
+        function applyLayout() {
+            document.querySelectorAll('.print-grid .widget').forEach(w => w.remove());
+            if (!charData.layout) return;
+
+            for (const [id, pos] of Object.entries(charData.layout)) {
+                if (pos && pos.placed) {
+                    const baseId = pos.baseId || id.split('_instance_')[0];
+                    const template = document.getElementById(baseId);
+                    
+                    if (template) {
+                        const el = template.cloneNode(true);
+                        el.id = id;
+                        if (pos.width) el.style.width = pos.width;
+                        if (pos.height) el.style.height = pos.height;
+
+                        const pageIndex = pos.page || 0;
+                        const targetGrid = document.querySelector(`.print-grid[data-page="${pageIndex}"]`);
+
+                        if (targetGrid) {
+                            el.style.position = 'absolute';
+                            el.style.left = pos.left;
+                            el.style.top = pos.top;
+                            targetGrid.appendChild(el); 
+                            initResizeHandles(el);
+                        }
+                    }
+                }
+            }
+        }
+
+        function switchMode(mode) {
+            const btnEditor = document.getElementById('btn-editor'), btnPreview = document.getElementById('btn-preview');
+            const editorView = document.getElementById('editor-view'), printContainer = document.getElementById('print-editor-container');
+
+            if (mode === 'editor') {
+                btnEditor.classList.add('border-red-500', 'bg-red-700', 'shadow-inner');
+                btnEditor.classList.remove('border-transparent', 'bg-gray-700', 'shadow-none');
+                btnPreview.classList.add('border-transparent', 'bg-gray-700');
+                btnPreview.classList.remove('border-gray-300', 'bg-gray-600', 'shadow-inner');
+                editorView.classList.remove('hidden');
+                printContainer.classList.add('hidden');
+            } else if (mode === 'preview') {
+                btnPreview.classList.add('border-gray-300', 'bg-gray-600', 'shadow-inner');
+                btnPreview.classList.remove('border-transparent', 'bg-gray-700', 'shadow-none');
+                btnEditor.classList.add('border-transparent', 'bg-gray-700');
+                btnEditor.classList.remove('border-red-500', 'bg-red-700', 'shadow-inner');
+                editorView.classList.add('hidden');
+                printContainer.classList.remove('hidden');
+                printContainer.classList.add('flex');
+            }
+        }
+
+        function saveCharacter() {
+            const blob = new Blob([JSON.stringify(charData, null, 2)], { type: "application/json" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = (charData.name ? charData.name.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase() : 'postava') + '.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function loadCharacter(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    if (loadedData && typeof loadedData === 'object' && Array.isArray(loadedData.classes)) {
+                        charData = loadedData;
+                        charData.pageCount = charData.pageCount || 1;
+                        charData.attributes = charData.attributes || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+                        charData.skills = charData.skills || {};
+                        
+                        document.getElementById('edit-name').value = charData.name || '';
+                        document.getElementById('edit-race').value = charData.race || '';
+                        document.getElementById('edit-background').value = charData.background || '';
+                        document.getElementById('edit-ac').value = charData.ac !== undefined ? charData.ac : 10;
+                        
+                        updateBasicInfo('name', charData.name || '');
+                        updateBasicInfo('race', charData.race || '');
+                        updateBasicInfo('background', charData.background || '');
+                        updateAC(charData.ac !== undefined ? charData.ac : 10);
+                        
+                        renderClassesEditor();
+                        renderAttributesEditor();
+                        recalculateAll();
+                        
+                        renderPages(); 
+                        applyLayout();
+                        recalculateAll(); // Force sync clones
+                    }
+                } catch (error) {
+                    document.getElementById('error-message').innerText = 'Chyba při čtení: ' + error.message;
+                    document.getElementById('error-alert').classList.remove('hidden');
+                    setTimeout(() => document.getElementById('error-alert').classList.add('hidden'), 5000);
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        }
+
+        window.onload = function() {
+            renderClassesEditor();
+            renderAttributesEditor();
+            recalculateAll();
+            renderPages(); 
+            initDragAndDrop();
+            applyLayout();
+        };
+    </script>
+</body>
+</html>
