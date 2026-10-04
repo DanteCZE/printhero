@@ -57,6 +57,10 @@
             border-color: #ef4444;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
+        .widget.selected {
+            border-color: #b91c1c;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25);
+        }
         .widget.dragging {
             cursor: grabbing;
             z-index: 1000 !important;
@@ -98,13 +102,32 @@
             opacity: 0;
             transition: opacity 0.2s;
             z-index: 10;
+            pointer-events: none;
         }
-        .widget:hover .resize-handle {
+        .widget.selected .resize-handle {
             opacity: 1;
+            pointer-events: auto;
         }
-        .resize-handle.se { bottom: -4px; right: -4px; width: 12px; height: 12px; background-color: #ef4444; cursor: se-resize; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
-        .resize-handle.e { top: 0; right: -4px; width: 8px; height: 100%; cursor: e-resize; }
-        .resize-handle.s { bottom: -4px; left: 0; width: 100%; height: 8px; cursor: s-resize; }
+        .resize-handle.n, .resize-handle.s { left: 50%; width: 12px; height: 8px; transform: translateX(-50%); cursor: ns-resize; }
+        .resize-handle.e, .resize-handle.w { top: 50%; width: 8px; height: 12px; transform: translateY(-50%); cursor: ew-resize; }
+        .resize-handle.n { top: -4px; }
+        .resize-handle.s { bottom: -4px; }
+        .resize-handle.e { right: -4px; }
+        .resize-handle.w { left: -4px; }
+        .resize-handle.ne, .resize-handle.nw, .resize-handle.se, .resize-handle.sw {
+            width: 12px;
+            height: 12px;
+            background-color: #ef4444;
+            border-radius: 50%;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+        .resize-handle.n, .resize-handle.e, .resize-handle.s, .resize-handle.w { background-color: #ef4444; }
+        .resize-handle.ne, .resize-handle.sw { cursor: nesw-resize; }
+        .resize-handle.nw, .resize-handle.se { cursor: nwse-resize; }
+        .resize-handle.ne { top: -4px; right: -4px; }
+        .resize-handle.nw { top: -4px; left: -4px; }
+        .resize-handle.se { bottom: -4px; right: -4px; }
+        .resize-handle.sw { bottom: -4px; left: -4px; }
         
         @media print {
             @page {
@@ -172,6 +195,7 @@
                 border-color: #000 !important;
                 background-color: transparent !important;
                 box-shadow: none !important;
+                outline: none !important;
             }
             
             .widget-label {
@@ -297,7 +321,7 @@
                 <h3 class="text-lg font-bold text-gray-800 mb-2 border-b-2 border-gray-200 pb-2">
                     <i class="fa-solid fa-boxes-stacked mr-2 text-gray-600"></i>Knihovna widgetů
                 </h3>
-                <p class="text-xs text-gray-500 mb-4">Přetáhněte widget na papír (klonuje se). Tažením za okraj lze měnit velikost. Upuštěním mimo mřížku se smaže.</p>
+                <p class="text-xs text-gray-500 mb-4">Přetáhněte widget na papír (klonuje se). Kliknutím vyberte widget, jehož velikost chcete měnit. Upuštěním mimo mřížku se smaže.</p>
                 
                 <div id="widget-library" class="flex-grow overflow-y-auto pr-2 flex flex-col gap-2 pb-10">
                     
@@ -668,7 +692,7 @@
 
         function initResizeHandles(element) {
             if (element.querySelector('.resize-handle')) return;
-            ['se', 'e', 's'].forEach(dir => {
+            ['n', 'ne', 'e', 'se', 's', 'sw', 'w', 'nw'].forEach(dir => {
                 const handle = document.createElement('div');
                 handle.className = `resize-handle ${dir}`;
                 handle.dataset.dir = dir;
@@ -679,13 +703,21 @@
         function initDragAndDrop() {
             let isDragging = false, isResizing = false;
             let resizeDir = null, draggedWidget = null;
-            let startMouseX, startMouseY, startWidth, startHeight;
+            let startMouseX, startMouseY, startWidth, startHeight, startLeft, startTop;
+
+            const selectWidget = (widget) => {
+                document.querySelectorAll('.print-grid .widget.selected').forEach(selected => selected.classList.remove('selected'));
+                if (widget) widget.classList.add('selected');
+            };
 
             const dragStart = (e) => {
-                if (e.target.classList.contains('resize-handle') || (e.touches && e.touches[0].target.classList.contains('resize-handle'))) {
+                const eventTarget = e.target;
+                const handle = eventTarget.closest('.resize-handle');
+                if (handle) {
+                    const widget = handle.closest('.widget');
+                    if (!widget.classList.contains('selected') || !widget.closest('.print-grid')) return;
                     isResizing = true;
-                    const handle = e.target.classList.contains('resize-handle') ? e.target : e.touches[0].target;
-                    draggedWidget = handle.closest('.widget');
+                    draggedWidget = widget;
                     resizeDir = handle.dataset.dir;
                     
                     const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
@@ -695,19 +727,27 @@
                     startMouseY = clientY;
                     startWidth = draggedWidget.offsetWidth;
                     startHeight = draggedWidget.offsetHeight;
+                    startLeft = draggedWidget.offsetLeft;
+                    startTop = draggedWidget.offsetTop;
                     e.preventDefault();
                     return;
                 }
 
-                const target = e.target.closest('.widget');
-                if (!target || (e.type === 'mousedown' && e.button !== 0)) return;
+                const target = eventTarget.closest('.widget');
+                if (e.type === 'mousedown' && e.button !== 0) return;
+                if (!target) {
+                    selectWidget(null);
+                    return;
+                }
                 
                 isDragging = true;
                 
                 if (target.closest('#widget-library')) {
+                    selectWidget(null);
                     draggedWidget = target.cloneNode(true);
                     draggedWidget.id = target.id + '_instance_' + Date.now();
                 } else {
+                    selectWidget(target);
                     draggedWidget = target;
                 }
                 
@@ -737,14 +777,32 @@
                 if (isResizing && draggedWidget) {
                     const deltaX = clientX - startMouseX;
                     const deltaY = clientY - startMouseY;
-                    
-                    if (resizeDir.includes('e')) {
-                        let newWidth = Math.max(GRID_SIZE * 3, Math.round((startWidth + deltaX) / GRID_SIZE) * GRID_SIZE); 
+
+                    if (resizeDir.includes('e') || resizeDir.includes('w')) {
+                        const maxWidth = resizeDir.includes('w')
+                            ? startWidth + startLeft
+                            : draggedWidget.parentElement.clientWidth - startLeft;
+                        const newWidth = Math.min(
+                            Math.floor(maxWidth / GRID_SIZE) * GRID_SIZE,
+                            Math.max(GRID_SIZE * 3, Math.round((startWidth + (resizeDir.includes('e') ? deltaX : -deltaX)) / GRID_SIZE) * GRID_SIZE)
+                        );
                         draggedWidget.style.width = newWidth + 'px';
+                        if (resizeDir.includes('w')) {
+                            draggedWidget.style.left = (startLeft + startWidth - newWidth) + 'px';
+                        }
                     }
-                    if (resizeDir.includes('s')) {
-                        let newHeight = Math.max(GRID_SIZE * 2, Math.round((startHeight + deltaY) / GRID_SIZE) * GRID_SIZE); 
+                    if (resizeDir.includes('n') || resizeDir.includes('s')) {
+                        const maxHeight = resizeDir.includes('n')
+                            ? startHeight + startTop
+                            : draggedWidget.parentElement.clientHeight - startTop;
+                        const newHeight = Math.min(
+                            Math.floor(maxHeight / GRID_SIZE) * GRID_SIZE,
+                            Math.max(GRID_SIZE * 2, Math.round((startHeight + (resizeDir.includes('s') ? deltaY : -deltaY)) / GRID_SIZE) * GRID_SIZE)
+                        );
                         draggedWidget.style.height = newHeight + 'px';
+                        if (resizeDir.includes('n')) {
+                            draggedWidget.style.top = (startTop + startHeight - newHeight) + 'px';
+                        }
                     }
                     return;
                 }
@@ -758,6 +816,8 @@
                     if (!charData.layout[draggedWidget.id]) charData.layout[draggedWidget.id] = {};
                     charData.layout[draggedWidget.id].width = draggedWidget.style.width;
                     charData.layout[draggedWidget.id].height = draggedWidget.style.height;
+                    charData.layout[draggedWidget.id].left = draggedWidget.style.left;
+                    charData.layout[draggedWidget.id].top = draggedWidget.style.top;
                     draggedWidget = null;
                     return;
                 }
@@ -797,6 +857,7 @@
                     targetGrid.appendChild(draggedWidget);
                     
                     initResizeHandles(draggedWidget);
+                    selectWidget(draggedWidget);
 
                     if (!charData.layout[draggedWidget.id]) charData.layout[draggedWidget.id] = {};
                     charData.layout[draggedWidget.id].placed = true;
