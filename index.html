@@ -96,6 +96,26 @@
             text-align: center;
             overflow: hidden;
         }
+
+        .hp-handwritten-box {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            box-sizing: border-box;
+            border: 2px solid #374151;
+            border-radius: 0.125rem;
+            background: white;
+        }
+
+        .attribute-widget-content > .sync-str-mod,
+        .attribute-widget-content > .sync-dex-mod,
+        .attribute-widget-content > .sync-con-mod,
+        .attribute-widget-content > .sync-int-mod,
+        .attribute-widget-content > .sync-wis-mod,
+        .attribute-widget-content > .sync-cha-mod {
+            margin-top: 0.25rem;
+            line-height: 1;
+        }
         
         .resize-handle {
             position: absolute;
@@ -300,7 +320,15 @@
             </div>
 
             <div class="mt-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Záchranné hody</h3>
+                <div id="saving-throws-editor-container" class="grid grid-cols-2 md:grid-cols-3 gap-3 bg-gray-50 p-4 rounded border border-gray-200">
+                    <!-- Záchranné hody se generují v JS -->
+                </div>
+            </div>
+
+            <div class="mt-8">
                 <h3 class="text-xl font-bold text-gray-800 mb-4 border-b-2 border-gray-200 pb-2">Dovednosti (Skills)</h3>
+                <p class="text-sm text-gray-500 mb-3">Z = zdatnost, E = expertíza (vyžaduje zdatnost).</p>
                 <div id="skills-editor-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 bg-gray-50 p-4 rounded border border-gray-200">
                     <!-- Dovednosti se generují v JS -->
                 </div>
@@ -375,6 +403,7 @@
                                 <span class="text-xs font-semibold">Maximum</span>
                                 <span class="sync-max-hp text-xl font-bold">8</span>
                             </div>
+<<<<<<< HEAD
                             <div class="z-10 relative flex justify-center gap-2 w-full">
                                 <div class="flex flex-col items-center">
                                     <div class="w-12 h-6 border-2 border-gray-700 bg-white rounded-sm"></div>
@@ -382,6 +411,15 @@
                                 </div>
                                 <div class="flex flex-col items-center">
                                     <div class="w-12 h-6 border-2 border-gray-700 bg-white rounded-sm"></div>
+=======
+                            <div class="z-10 relative flex justify-center gap-3 w-full h-2/3">
+                                <div class="flex flex-col items-center justify-end w-[42%] h-full">
+                                    <div class="hp-handwritten-box"></div>
+                                    <span class="text-[0.5rem] text-gray-700">Aktuální</span>
+                                </div>
+                                <div class="flex flex-col items-center justify-end w-[42%] h-full">
+                                    <div class="hp-handwritten-box"></div>
+>>>>>>> agents/print-editor-panel-enhancements
                                     <span class="text-[0.5rem] text-gray-700">Dočasné</span>
                                 </div>
                             </div>
@@ -393,49 +431,49 @@
                         <!-- Síla -->
                         <div id="widget-str" class="widget" style="width: 80px; height: 100px;">
                             <label class="widget-label text-[0.5rem]">Síla</label>
-                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                            <div class="widget-content attribute-widget-content flex-col relative w-full h-full gap-1 pt-4 pb-2">
                                 <span class="sync-str-mod text-3xl font-bold mt-2">+0</span>
-                                <div class="sync-str-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                                <div class="sync-str-score w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
                             </div>
                         </div>
                         <!-- Obratnost -->
                         <div id="widget-dex" class="widget" style="width: 80px; height: 100px;">
                             <label class="widget-label text-[0.5rem]">Obratnost</label>
-                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                            <div class="widget-content attribute-widget-content flex-col relative w-full h-full gap-1 pt-4 pb-2">
                                 <span class="sync-dex-mod text-3xl font-bold mt-2">+0</span>
-                                <div class="sync-dex-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                                <div class="sync-dex-score w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
                             </div>
                         </div>
                         <!-- Odolnost -->
                         <div id="widget-con" class="widget" style="width: 80px; height: 100px;">
                             <label class="widget-label text-[0.5rem]">Odolnost</label>
-                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                            <div class="widget-content attribute-widget-content flex-col relative w-full h-full gap-1 pt-4 pb-2">
                                 <span class="sync-con-mod text-3xl font-bold mt-2">+0</span>
-                                <div class="sync-con-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                                <div class="sync-con-score w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
                             </div>
                         </div>
                         <!-- Inteligence -->
                         <div id="widget-int" class="widget" style="width: 80px; height: 100px;">
                             <label class="widget-label text-[0.5rem]">Inteligence</label>
-                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                            <div class="widget-content attribute-widget-content flex-col relative w-full h-full gap-1 pt-4 pb-2">
                                 <span class="sync-int-mod text-3xl font-bold mt-2">+0</span>
-                                <div class="sync-int-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                                <div class="sync-int-score w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
                             </div>
                         </div>
                         <!-- Moudrost -->
                         <div id="widget-wis" class="widget" style="width: 80px; height: 100px;">
                             <label class="widget-label text-[0.5rem]">Moudrost</label>
-                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                            <div class="widget-content attribute-widget-content flex-col relative w-full h-full gap-1 pt-4 pb-2">
                                 <span class="sync-wis-mod text-3xl font-bold mt-2">+0</span>
-                                <div class="sync-wis-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                                <div class="sync-wis-score w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
                             </div>
                         </div>
                         <!-- Charisma -->
                         <div id="widget-cha" class="widget" style="width: 80px; height: 100px;">
                             <label class="widget-label text-[0.5rem]">Charisma</label>
-                            <div class="widget-content flex-col relative w-full h-full pb-4">
+                            <div class="widget-content attribute-widget-content flex-col relative w-full h-full gap-1 pt-4 pb-2">
                                 <span class="sync-cha-mod text-3xl font-bold mt-2">+0</span>
-                                <div class="sync-cha-score absolute bottom-2 w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
+                                <div class="sync-cha-score w-10 h-6 bg-gray-100 border border-gray-400 rounded-full flex items-center justify-center text-sm font-bold">10</div>
                             </div>
                         </div>
                     </div>
@@ -447,6 +485,17 @@
                             <div class="sync-skills-list w-full flex flex-col gap-[2px] text-[0.7rem]">
                                 <!-- Generuje se v JS -->
                             </div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-400 text-xs mt-4 uppercase">Kombinované vlastnosti</h4>
+                    <div id="attribute-combo-widgets" class="flex flex-col gap-2"></div>
+
+                    <h4 class="font-bold text-gray-400 text-xs mt-4 uppercase">Záchranné hody</h4>
+                    <div id="widget-saving-throws" class="widget" style="width: 180px; height: 220px;">
+                        <label class="widget-label">Záchranné hody</label>
+                        <div class="widget-content items-start pt-6">
+                            <div class="sync-saving-throws-list w-full flex flex-col gap-[2px] text-[0.7rem]"></div>
                         </div>
                     </div>
 
@@ -494,8 +543,8 @@
 
         const skillsDef = [
             { id: 'acrobatics', name: 'Akrobacie', attr: 'dex' },
-            { id: 'animalHandling', name: 'Zacházení se zvířaty', attr: 'wis' },
-            { id: 'arcana', name: 'Znalost magie', attr: 'int' },
+            { id: 'animalHandling', name: 'Ovládání zvířat', attr: 'wis' },
+            { id: 'arcana', name: 'Mystika', attr: 'int' },
             { id: 'athletics', name: 'Atletika', attr: 'str' },
             { id: 'deception', name: 'Klamání', attr: 'cha' },
             { id: 'history', name: 'Historie', attr: 'int' },
@@ -504,8 +553,8 @@
             { id: 'investigation', name: 'Pátrání', attr: 'int' },
             { id: 'medicine', name: 'Lékařství', attr: 'wis' },
             { id: 'nature', name: 'Příroda', attr: 'int' },
-            { id: 'perception', name: 'Postřeh', attr: 'wis' },
-            { id: 'performance', name: 'Vystupování', attr: 'cha' },
+            { id: 'perception', name: 'Vnímání', attr: 'wis' },
+            { id: 'performance', name: 'Umění', attr: 'cha' },
             { id: 'persuasion', name: 'Přesvědčování', attr: 'cha' },
             { id: 'religion', name: 'Náboženství', attr: 'int' },
             { id: 'sleightOfHand', name: 'Čachry', attr: 'dex' },
@@ -521,6 +570,7 @@
             classes: [{ name: '', subclass: '', level: 1, hitDie: 'd8' }],
             attributes: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
             skills: {},
+            savingThrows: {},
             currentHp: null,
             layout: {},
             pageCount: 1
@@ -564,11 +614,33 @@
             return val >= 0 ? `+${val}` : `${val}`;
         }
 
+        function getSkillProficiencyLevel(skillId) {
+            const level = charData.skills[skillId];
+            if (level === true) return 1;
+            const numericLevel = Number(level);
+            return Number.isFinite(numericLevel) ? Math.max(0, Math.min(2, numericLevel)) : 0;
+        }
+
+        function getSortedSkills(attribute) {
+            const collator = new Intl.Collator('cs', { sensitivity: 'base' });
+            return skillsDef
+                .filter(skill => !attribute || skill.attr === attribute)
+                .slice()
+                .sort((first, second) => collator.compare(first.name, second.name));
+        }
+
+        function getSkillModifier(skill) {
+            return calculateModifier(charData.attributes[skill.attr])
+                + getProficiencyBonus() * getSkillProficiencyLevel(skill.id);
+        }
+
         function recalculateAll() {
             updatePrintClasses();
             updatePrintAttributes();
             renderSkillsEditor();
             updatePrintSkills();
+            renderSavingThrowsEditor();
+            updatePrintSavingThrows();
             updatePrintHitPoints();
         }
 
@@ -656,52 +728,127 @@
         function renderSkillsEditor() {
             const container = document.getElementById('skills-editor-container');
             container.innerHTML = '';
-            const pb = getProficiencyBonus();
 
-            skillsDef.forEach(skill => {
-                const isProf = charData.skills[skill.id] || false;
-                const attrMod = calculateModifier(charData.attributes[skill.attr]);
-                const total = attrMod + (isProf ? pb : 0);
+            getSortedSkills().forEach(skill => {
+                const proficiencyLevel = getSkillProficiencyLevel(skill.id);
+                const isProficient = proficiencyLevel > 0;
+                const isExpert = proficiencyLevel > 1;
+                const total = getSkillModifier(skill);
                 
                 container.insertAdjacentHTML('beforeend', `
-                    <label class="flex items-center justify-between p-2 hover:bg-gray-200 rounded cursor-pointer transition-colors">
-                        <div class="flex items-center space-x-3">
-                            <input type="checkbox" ${isProf ? 'checked' : ''} onchange="updateSkill('${skill.id}', this.checked)" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
-                            <span class="text-sm font-semibold text-gray-700">${skill.name} <span class="text-gray-400 text-xs">(${attrShort[skill.attr]})</span></span>
+                    <div class="flex items-center justify-between gap-2 p-2 hover:bg-gray-200 rounded transition-colors">
+                        <span class="text-sm font-semibold text-gray-700">${skill.name} <span class="text-gray-400 text-xs">(${attrShort[skill.attr]})</span></span>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer" title="Zdatnost">
+                                <input type="checkbox" ${isProficient ? 'checked' : ''} onchange="updateSkill('${skill.id}', this.checked ? (${isExpert ? 2 : 1}) : 0)" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
+                                Z
+                            </label>
+                            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer" title="Expertíza">
+                                <input type="checkbox" ${isExpert ? 'checked' : ''} ${isProficient ? '' : 'disabled'} onchange="updateSkill('${skill.id}', this.checked ? 2 : 1)" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
+                                E
+                            </label>
+                            <span class="font-bold ${isProficient ? 'text-red-700' : 'text-gray-600'} min-w-[2rem] text-right">${formatMod(total)}</span>
                         </div>
-                        <span class="font-bold ${isProf ? 'text-red-700' : 'text-gray-600'}">${formatMod(total)}</span>
-                    </label>
+                    </div>
                 `);
             });
         }
 
-        function updateSkill(id, isProficient) {
-            charData.skills[id] = isProficient;
+        function updateSkill(id, proficiencyLevel) {
+            charData.skills[id] = Math.max(0, Math.min(2, Number(proficiencyLevel) || 0));
             recalculateAll();
         }
 
         function updatePrintSkills() {
-            const pb = getProficiencyBonus();
-            let html = '';
-            
-            skillsDef.forEach(skill => {
-                const isProf = charData.skills[skill.id] || false;
-                const attrMod = calculateModifier(charData.attributes[skill.attr]);
-                const total = attrMod + (isProf ? pb : 0);
-                const icon = isProf ? '<i class="fa-solid fa-circle text-[8px] text-black"></i>' : '<i class="fa-regular fa-circle text-[8px] text-gray-400"></i>';
-                
-                html += `
+            document.querySelectorAll('.sync-skills-list').forEach(list => {
+                const html = getSortedSkills(list.dataset.attr).map(skill => {
+                    const proficiencyLevel = getSkillProficiencyLevel(skill.id);
+                    const isProficient = proficiencyLevel > 0;
+                    const icon = proficiencyLevel > 1
+                        ? '<i class="fa-solid fa-star text-[8px] text-black"></i>'
+                        : isProficient
+                            ? '<i class="fa-solid fa-circle text-[8px] text-black"></i>'
+                            : '<i class="fa-regular fa-circle text-[8px] text-gray-400"></i>';
+
+                    return `
                     <div class="flex justify-between items-center w-full border-b border-gray-200 pb-[1px]">
                         <div class="flex items-center gap-1">
                             <span class="w-3 text-center">${icon}</span>
-                            <span class="${isProf ? 'font-bold' : ''}">${skill.name} <span class="text-[0.5rem] text-gray-500">(${attrShort[skill.attr]})</span></span>
+                            <span class="${isProficient ? 'font-bold' : ''}">${skill.name} <span class="text-[0.5rem] text-gray-500">(${attrShort[skill.attr]})</span></span>
                         </div>
-                        <span class="font-bold border-b border-black min-w-[20px] text-center">${formatMod(total)}</span>
+                        <span class="font-bold border-b border-black min-w-[20px] text-center">${formatMod(getSkillModifier(skill))}</span>
                     </div>
                 `;
+                }).join('');
+                list.innerHTML = html;
             });
+        }
 
-            document.querySelectorAll(`.sync-skills-list`).forEach(el => el.innerHTML = html);
+        function renderSavingThrowsEditor() {
+            const container = document.getElementById('saving-throws-editor-container');
+            container.innerHTML = '';
+            for (const [key, label] of Object.entries(attrLabels)) {
+                const isProficient = Boolean(charData.savingThrows[key]);
+                const modifier = calculateModifier(charData.attributes[key]) + (isProficient ? getProficiencyBonus() : 0);
+                container.insertAdjacentHTML('beforeend', `
+                    <label class="flex items-center justify-between p-2 hover:bg-gray-200 rounded cursor-pointer transition-colors">
+                        <span class="flex items-center gap-2 text-sm font-semibold text-gray-700">
+                            <input type="checkbox" ${isProficient ? 'checked' : ''} onchange="updateSavingThrow('${key}', this.checked)" class="w-4 h-4 text-red-600 rounded border-gray-300 focus:ring-red-500">
+                            ${label}
+                        </span>
+                        <span class="font-bold ${isProficient ? 'text-red-700' : 'text-gray-600'}">${formatMod(modifier)}</span>
+                    </label>
+                `);
+            }
+        }
+
+        function updateSavingThrow(attribute, isProficient) {
+            charData.savingThrows[attribute] = isProficient;
+            recalculateAll();
+        }
+
+        function updatePrintSavingThrows() {
+            const html = Object.entries(attrLabels).map(([attribute, label]) => {
+                const isProficient = Boolean(charData.savingThrows[attribute]);
+                const modifier = calculateModifier(charData.attributes[attribute])
+                    + (isProficient ? getProficiencyBonus() : 0);
+                document.querySelectorAll(`.sync-${attribute}-save`).forEach(value => {
+                    value.innerText = formatMod(modifier);
+                });
+                const icon = isProficient
+                    ? '<i class="fa-solid fa-circle text-[8px] text-black"></i>'
+                    : '<i class="fa-regular fa-circle text-[8px] text-gray-400"></i>';
+                return `
+                    <div class="flex justify-between items-center w-full border-b border-gray-200 pb-[1px]">
+                        <span class="flex items-center gap-1"><span class="w-3 text-center">${icon}</span>${label}</span>
+                        <span class="font-bold border-b border-black min-w-[20px] text-center">${formatMod(modifier)}</span>
+                    </div>
+                `;
+            }).join('');
+            document.querySelectorAll('.sync-saving-throws-list').forEach(list => list.innerHTML = html);
+        }
+
+        function renderAttributeComboWidgets() {
+            const container = document.getElementById('attribute-combo-widgets');
+            container.innerHTML = '';
+            for (const [attribute, label] of Object.entries(attrLabels)) {
+                container.insertAdjacentHTML('beforeend', `
+                    <div id="widget-combo-${attribute}" class="widget" style="width: 240px; height: 220px;">
+                        <label class="widget-label">${label}, záchranný hod a dovednosti</label>
+                        <div class="widget-content flex-col items-stretch justify-start gap-1 pt-6 pb-2 px-2 text-left">
+                            <div class="flex items-center justify-between border-b border-gray-300 pb-1">
+                                <span class="font-semibold">${label}</span>
+                                <span class="font-bold"><span class="sync-${attribute}-score">10</span> (<span class="sync-${attribute}-mod">+0</span>)</span>
+                            </div>
+                            <div class="flex items-center justify-between border-b border-gray-300 pb-1 text-xs">
+                                <span>Záchranný hod</span>
+                                <span class="font-bold sync-${attribute}-save">+0</span>
+                            </div>
+                            <div class="sync-skills-list" data-attr="${attribute}"></div>
+                        </div>
+                    </div>
+                `);
+            }
         }
 
         function renderClassesEditor() {
@@ -1110,6 +1257,7 @@
                         charData.pageCount = charData.pageCount || 1;
                         charData.attributes = charData.attributes || { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
                         charData.skills = charData.skills || {};
+                        charData.savingThrows = charData.savingThrows || {};
                         charData.classes.forEach(cls => { cls.hitDie = cls.hitDie || 'd8'; });
                         if (charData.currentHp === undefined) charData.currentHp = null;
                         
@@ -1142,6 +1290,7 @@
         }
 
         window.onload = function() {
+            renderAttributeComboWidgets();
             renderClassesEditor();
             renderAttributesEditor();
             recalculateAll();
